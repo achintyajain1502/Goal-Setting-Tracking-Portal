@@ -28,7 +28,7 @@ npm run build
 | Manager | Priya Menon | priya@local.com | manager | Approvals, Team Goals, Shared Goals |
 | Admin | Rahul Gupta | rahul@local.com | admin | All Goals, Audit Log, Reports, Cycles |
 
-## SignUp check Credential
+## SignUp Check Credential
 
 | Role | Name | Email | Password | Access |
 |---|---|---|---|---|
