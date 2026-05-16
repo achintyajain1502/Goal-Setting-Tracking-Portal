@@ -8,8 +8,8 @@ import { computeProgress, progressColor, nowStr } from '../utils';
 import { USERS } from '../data';
 
 // ── Employee Dashboard ────────────────────────────────────────────────────────
-export function EmpDashboard({ goals, onNavigate }) {
-  const myGoals = goals.filter(g => g.empId === 'emp1');
+export function EmpDashboard({ goals, onNavigate, currentUser = USERS.employee }) {
+  const myGoals = goals.filter(g => g.empId === currentUser.id);
   const approved = myGoals.filter(g => g.status === 'Approved');
   const totalWeight = approved.reduce((s, g) => s + Number(g.weightage), 0);
   const onTrack   = myGoals.filter(g => g.checkStatus === 'On Track').length;
@@ -56,11 +56,11 @@ export function EmpDashboard({ goals, onNavigate }) {
 }
 
 // ── My Goals ──────────────────────────────────────────────────────────────────
-export function MyGoals({ goals, setGoals, addAudit, showToast }) {
+export function MyGoals({ goals, setGoals, addAudit, showToast, currentUser = USERS.employee }) {
   const [modal, setModal] = useState(null); // null | 'add' | goalObj
-  const myGoals = goals.filter(g => g.empId === 'emp1');
+  const myGoals = goals.filter(g => g.empId === currentUser.id);
   const totalWeight = myGoals.reduce((s, g) => s + Number(g.weightage), 0);
-  const empName = USERS.employee.name;
+  const empName = currentUser.name;
 
   const handleAdd = newGoal => {
     setGoals(prev => [...prev, newGoal]);
@@ -87,7 +87,7 @@ export function MyGoals({ goals, setGoals, addAudit, showToast }) {
     }
 
     setGoals(prev => prev.map(g =>
-      g.empId === 'emp1' && g.status === 'Draft' ? { ...g, status: 'Pending' } : g
+      g.empId === currentUser.id && g.status === 'Draft' ? { ...g, status: 'Pending' } : g
     ));
     const count = myGoals.filter(g => g.status === 'Draft').length;
     addAudit({ time: nowStr(), user: empName, action: `Submitted ${count} goal(s) for manager approval` });
@@ -105,6 +105,7 @@ export function MyGoals({ goals, setGoals, addAudit, showToast }) {
           onClose={() => setModal(null)}
           addAudit={addAudit}
           empName={empName}
+          empId={currentUser.id}
         />
       )}
 
@@ -194,12 +195,12 @@ export function MyGoals({ goals, setGoals, addAudit, showToast }) {
 }
 
 // ── Employee Check-in ─────────────────────────────────────────────────────────
-export function EmpCheckin({ goals, setGoals, addAudit, showToast }) {
-  const approved = goals.filter(g => g.empId === 'emp1' && g.status === 'Approved');
+export function EmpCheckin({ goals, setGoals, addAudit, showToast, currentUser = USERS.employee }) {
+  const approved = goals.filter(g => g.empId === currentUser.id && g.status === 'Approved');
   const [drafts, setDrafts] = useState(
     Object.fromEntries(approved.map(g => [g.id, { actual: g.actual ?? '', status: g.checkStatus }]))
   );
-  const empName = USERS.employee.name;
+  const empName = currentUser.name;
 
   const save = id => {
     const d = drafts[id];

@@ -7,6 +7,7 @@ const {
   addAudit,
   authenticate,
   connectDatabase,
+  createUser,
   getSnapshot,
   replaceGoals,
   resetDatabase,
@@ -82,6 +83,14 @@ app.post('/api/auth/login', async (req, res, next) => {
   }
 });
 
+app.post('/api/auth/signup', async (req, res, next) => {
+  try {
+    res.status(201).json(await createUser(req.body || {}));
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.put('/api/goals', async (req, res, next) => {
   try {
     const { goals } = req.body || {};
@@ -127,7 +136,10 @@ app.get(/.*/, (_req, res) => {
 
 app.use((error, _req, res, _next) => {
   console.error(error);
-  res.status(500).json({ message: 'Server error', detail: error.message });
+  res.status(error.statusCode || 500).json({
+    message: error.statusCode ? error.message : 'Server error',
+    detail: error.message,
+  });
 });
 
 if (require.main === module) {

@@ -70,6 +70,15 @@ export async function authenticate(email, password) {
   return session;
 }
 
+export async function signupAccount(account) {
+  const session = await request('/api/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify(account),
+  });
+  saveSession(session);
+  return session;
+}
+
 export async function saveGoals(goals) {
   const database = await request('/api/goals', {
     method: 'PUT',

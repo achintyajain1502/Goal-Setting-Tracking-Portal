@@ -15,7 +15,7 @@ const INITIAL_GOALS = [
   { id:2, emp:'Arjun Sharma', empId:'emp1', thrust:'Customer Success', title:'Increase NPS Score', desc:'Improve net promoter score from 62 to 75', uom:'Min', target:75, unit:'Score', weightage:20, status:'Approved', quarter:'Q1', actual:68, checkStatus:'On Track', managerComment:'', locked:true, shared:false, sharedFrom:null },
   { id:3, emp:'Arjun Sharma', empId:'emp1', thrust:'Process Excellence', title:'Reduce Deal Closure TAT', desc:'Bring average deal closure from 18 days to 12 days', uom:'Max', target:12, unit:'Days', weightage:20, status:'Approved', quarter:'Q1', actual:14, checkStatus:'On Track', managerComment:'', locked:true, shared:false, sharedFrom:null },
   { id:4, emp:'Arjun Sharma', empId:'emp1', thrust:'Compliance', title:'Zero Compliance Incidents', desc:'Ensure zero compliance violations in all deals', uom:'Zero', target:0, unit:'Count', weightage:15, status:'Approved', quarter:'Q1', actual:0, checkStatus:'Completed', managerComment:'Excellent', locked:true, shared:true, sharedFrom:'Priya Menon' },
-  { id:5, emp:'Arjun Sharma', empId:'emp1', thrust:'Learning & Development', title:'Complete Sales Certification', desc:'Complete Salesforce CRM certification by June', uom:'Timeline', target:'2025-06-30', unit:'Date', weightage:15, status:'Approved', quarter:'Q1', actual:'2025-06-15', checkStatus:'On Track', managerComment:'', locked:true, shared:false, sharedFrom:null },
+  { id:5, emp:'Arjun Sharma', empId:'emp1', thrust:'Learning & Development', title:'Complete Sales Certification', desc:'Complete Salesforce CRM certification by May 17', uom:'Timeline', target:'2026-05-17', unit:'Date', weightage:15, status:'Approved', quarter:'Q1', actual:'2026-05-16', checkStatus:'On Track', managerComment:'', locked:true, shared:false, sharedFrom:null },
   { id:6, emp:'Neha Patel', empId:'emp2', thrust:'Revenue Growth', title:'Achieve Q1 Sales Target', desc:'Close Rs.40L in new business', uom:'Min', target:40, unit:'Lakhs', weightage:35, status:'Approved', quarter:'Q1', actual:28, checkStatus:'Not Started', managerComment:'', locked:true, shared:false, sharedFrom:null },
   { id:7, emp:'Neha Patel', empId:'emp2', thrust:'Compliance', title:'Zero Compliance Incidents', desc:'Ensure zero compliance violations', uom:'Zero', target:0, unit:'Count', weightage:25, status:'Approved', quarter:'Q1', actual:0, checkStatus:'Completed', managerComment:'', locked:true, shared:true, sharedFrom:'Priya Menon' },
   { id:8, emp:'Neha Patel', empId:'emp2', thrust:'Customer Success', title:'Client Retention Rate', desc:'Maintain 90% client retention', uom:'Min', target:90, unit:'%', weightage:40, status:'Approved', quarter:'Q1', actual:85, checkStatus:'On Track', managerComment:'', locked:true, shared:false, sharedFrom:null },
@@ -25,11 +25,11 @@ const INITIAL_GOALS = [
 ];
 
 const INITIAL_AUDIT = [
-  { time:'2025-05-01 09:30', user:'Priya Menon', action:'Approved goals for Arjun Sharma (IDs: 1,2,3,4,5)' },
-  { time:'2025-05-01 10:15', user:'Priya Menon', action:'Pushed shared goal "Zero Compliance Incidents" to Arjun Sharma and Neha Patel' },
-  { time:'2025-05-03 14:22', user:'Arjun Sharma', action:'Submitted Q1 actual achievement for Goal #1 (Revenue: 38 Lakhs)' },
-  { time:'2025-05-05 11:10', user:'Priya Menon', action:'Added check-in comment for Arjun Sharma - Goal #1' },
-  { time:'2025-05-10 09:05', user:'Rahul Gupta (Admin)', action:'Unlocked Goal #3 for Arjun Sharma for revision' },
+  { time:'2026-05-01 09:30', user:'Priya Menon', action:'Approved goals for Arjun Sharma (IDs: 1,2,3,4,5)' },
+  { time:'2026-05-05 10:15', user:'Priya Menon', action:'Pushed shared goal "Zero Compliance Incidents" to Arjun Sharma and Neha Patel' },
+  { time:'2026-05-10 14:22', user:'Arjun Sharma', action:'Submitted Q1 actual achievement for Goal #1 (Revenue: 38 Lakhs)' },
+  { time:'2026-05-15 11:10', user:'Priya Menon', action:'Added check-in comment for Arjun Sharma - Goal #1' },
+  { time:'2026-05-17 09:05', user:'Rahul Gupta (Admin)', action:'Unlocked Goal #3 for Arjun Sharma for revision' },
 ];
 
 function buildSeedDatabase() {

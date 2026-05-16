@@ -13,7 +13,9 @@ let usingMongo = false;
 async function readFileDatabase() {
   try {
     const raw = await fs.readFile(dataFile, 'utf8');
-    return JSON.parse(raw);
+    const database = normalizeSeedDates(JSON.parse(raw));
+    await writeFileDatabase(database);
+    return database;
   } catch {
     const seed = buildSeedDatabase();
     await writeFileDatabase(seed);
@@ -38,6 +40,29 @@ async function seedMongoIfNeeded() {
   if (await users.countDocuments() === 0) await users.insertMany(seed.users);
   if (await goals.countDocuments() === 0) await goals.insertMany(seed.goals);
   if (await auditLog.countDocuments() === 0) await auditLog.insertMany(seed.auditLog);
+
+  await goals.updateOne({ id: 5 }, { $set: seed.goals.find(goal => goal.id === 5) });
+  await Promise.all(seed.auditLog.map(entry => auditLog.updateOne(
+    { action: entry.action },
+    { $set: entry },
+    { upsert: true }
+  )));
+}
+
+function normalizeSeedDates(database) {
+  const seed = buildSeedDatabase();
+  const datedGoal = seed.goals.find(goal => goal.id === 5);
+  const auditByAction = new Map(seed.auditLog.map(entry => [entry.action, entry]));
+
+  return {
+    ...database,
+    goals: Array.isArray(database.goals)
+      ? database.goals.map(goal => goal.id === 5 ? { ...goal, ...datedGoal } : goal)
+      : seed.goals,
+    auditLog: Array.isArray(database.auditLog)
+      ? database.auditLog.map(entry => auditByAction.get(entry.action) || entry)
+      : seed.auditLog,
+  };
 }
 
 async function connectDatabase() {
@@ -88,6 +113,10 @@ async function authenticate(email, password) {
 
   if (!user) return null;
 
+  return buildSession(user);
+}
+
+function buildSession(user) {
   return {
     email: user.email,
     id: user.id,
@@ -95,6 +124,63 @@ async function authenticate(email, password) {
     role: user.roleKey,
     signedInAt: new Date().toISOString(),
   };
+}
+
+function buildUser({ name, email, password, dept = 'General' }) {
+  const trimmedName = name.trim();
+  const initials = trimmedName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join('') || 'U';
+
+  return {
+    id: `emp-${Date.now()}`,
+    name: trimmedName,
+    role: 'Employee',
+    roleKey: 'employee',
+    dept: dept.trim() || 'General',
+    email: email.trim().toLowerCase(),
+    password,
+    color: '#4f7cff',
+    initials,
+  };
+}
+
+async function createUser(payload) {
+  const name = String(payload.name || '').trim();
+  const email = String(payload.email || '').trim().toLowerCase();
+  const password = String(payload.password || '');
+
+  if (!name || !email || !password) {
+    const error = new Error('Name, email, and password are required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const user = buildUser({ ...payload, name, email, password });
+
+  if (usingMongo) {
+    const users = mongoDb.collection('users');
+    if (await users.findOne({ email })) {
+      const error = new Error('An account already exists for this email');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    await users.insertOne(user);
+    return buildSession(user);
+  }
+
+  const database = await readFileDatabase();
+  if (database.users.some(item => item.email.toLowerCase() === email)) {
+    const error = new Error('An account already exists for this email');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  await writeFileDatabase({ ...database, users: [...database.users, user] });
+  return buildSession(user);
 }
 
 async function replaceGoals(goals) {
@@ -144,6 +230,7 @@ module.exports = {
   addAudit,
   authenticate,
   connectDatabase,
+  createUser,
   getSnapshot,
   replaceGoals,
   resetDatabase,

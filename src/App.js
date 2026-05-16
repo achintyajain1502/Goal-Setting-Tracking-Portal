@@ -12,6 +12,7 @@ import {
   loadDatabase,
   saveAudit,
   saveGoals,
+  signupAccount,
 } from './db';
 
 // Employee pages
@@ -22,12 +23,12 @@ import { MgrDashboard, TeamGoals, Approvals, MgrCheckin, SharedGoals } from './c
 import { AdminDashboard, AllGoals, AuditLog, Reports, CycleMgmt } from './components/AdminPages';
 
 // ─── Page registry ────────────────────────────────────────────────────────────
-function usePages(goals, setGoals, auditLog, addAudit, showToast, navigate) {
+function usePages(goals, setGoals, auditLog, addAudit, showToast, navigate, currentUser) {
   return {
     employee: {
-      dashboard: () => <EmpDashboard goals={goals} onNavigate={navigate} />,
-      'my-goals': () => <MyGoals goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} />,
-      checkin:   () => <EmpCheckin goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} />,
+      dashboard: () => <EmpDashboard goals={goals} onNavigate={navigate} currentUser={currentUser} />,
+      'my-goals': () => <MyGoals goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} currentUser={currentUser} />,
+      checkin:   () => <EmpCheckin goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} currentUser={currentUser} />,
     },
     manager: {
       dashboard:    () => <MgrDashboard goals={goals} onNavigate={navigate} />,
@@ -57,6 +58,7 @@ export default function App() {
   const role = session?.role;
   const goals = database?.goals || EMPTY_DATABASE.goals;
   const auditLog = database?.auditLog || EMPTY_DATABASE.auditLog;
+  const currentUser = database?.users?.find(user => user.email === session?.email || user.id === session?.id);
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
@@ -126,13 +128,30 @@ export default function App() {
     }
   };
 
+  const signup = async account => {
+    try {
+      const nextSession = await signupAccount(account);
+      const nextDatabase = await loadDatabase();
+      setSession(nextSession);
+      setDatabase(nextDatabase || EMPTY_DATABASE);
+      setPage('dashboard');
+      showToast(`Welcome, ${nextSession.name}`);
+      return true;
+    } catch (error) {
+      showToast(error.message === 'Failed to fetch'
+        ? 'Cannot reach backend API. Start npm run server first.'
+        : error.message, 'warn');
+      return false;
+    }
+  };
+
   const logout = () => {
     clearSession();
     setSession(null);
     setPage('dashboard');
   };
 
-  const pages = usePages(goals, setGoals, auditLog, addAudit, showToast, navigate);
+  const pages = usePages(goals, setGoals, auditLog, addAudit, showToast, navigate, currentUser);
 
   // Get label for topbar
   const pageLabel = role ? (NAV[role]?.find(n => n.id === page)?.label || 'Dashboard') : '';
@@ -151,7 +170,7 @@ export default function App() {
 
   if (!role) return (
     <>
-      <LoginScreen onLogin={login} />
+      <LoginScreen onLogin={login} onSignup={signup} />
       <Toast message={toast.message} type={toast.type} />
     </>
   );
@@ -160,7 +179,7 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      <Sidebar role={role} currentPage={page} onNavigate={navigate} onLogout={logout} />
+      <Sidebar role={role} user={currentUser} currentPage={page} onNavigate={navigate} onLogout={logout} />
       <main className="main-content">
         <div className="topbar">
           <div className="topbar-title">{pageLabel}</div>

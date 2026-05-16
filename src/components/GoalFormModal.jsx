@@ -10,9 +10,9 @@ const UOM_OPTIONS = [
   { value: 'Zero',     label: 'Zero — Zero equals 100% success'        },
 ];
 
-export default function GoalFormModal({ mode, goal, myGoals, onSave, onClose, addAudit, empName }) {
+export default function GoalFormModal({ mode, goal, myGoals, onSave, onClose, addAudit, empName, empId = 'emp1' }) {
   const usedWeight = myGoals
-    .filter(g => g.empId === (goal?.empId || 'emp1') && (!goal || g.id !== goal.id))
+    .filter(g => g.empId === (goal?.empId || empId) && (!goal || g.id !== goal.id))
     .reduce((s, g) => s + Number(g.weightage), 0);
 
   const [form, setForm] = useState({
@@ -54,7 +54,7 @@ export default function GoalFormModal({ mode, goal, myGoals, onSave, onClose, ad
     if (mode === 'add') {
       const newGoal = {
         id: Date.now(),
-        emp: empName, empId: 'emp1',
+        emp: empName, empId,
         thrust: form.thrust, title: form.title, desc: form.desc,
         uom: form.uom, target: resolvedTarget, unit: form.unit,
         weightage: Number(form.weightage),

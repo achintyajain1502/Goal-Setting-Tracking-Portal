@@ -1,8 +1,8 @@
 import React from 'react';
 import { NAV, USERS } from '../data';
 
-export default function Sidebar({ role, currentPage, onNavigate, onLogout }) {
-  const user = USERS[role];
+export default function Sidebar({ role, user: signedInUser, currentPage, onNavigate, onLogout }) {
+  const user = signedInUser || USERS[role];
   const navItems = NAV[role] || [];
 
   return (
