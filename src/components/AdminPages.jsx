@@ -191,7 +191,7 @@ export function Reports({ goals, showToast }) {
 }
 
 // ── Cycle Management ──────────────────────────────────────────────────────────
-export function CycleMgmt({ showToast }) {
+export function CycleManagement({ showToast }) {
   const [config, setConfig] = useState({ cycle: 'Q1 Check-in (July)', status: 'Open', opens: '2025-07-01', closes: '2025-07-31' });
 
   return (

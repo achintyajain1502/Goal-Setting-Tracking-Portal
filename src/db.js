@@ -95,6 +95,13 @@ export async function saveAudit(entry) {
   return normalizeDatabase(database);
 }
 
+export async function sendNotificationEvent(event) {
+  return request('/api/notifications/event', {
+    method: 'POST',
+    body: JSON.stringify(event),
+  });
+}
+
 export async function resetDatabase() {
   const database = await request('/api/reset', { method: 'POST' });
   return normalizeDatabase(database);

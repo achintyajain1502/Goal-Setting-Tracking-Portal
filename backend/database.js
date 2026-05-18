@@ -205,6 +205,66 @@ async function addAudit(entry) {
   await writeFileDatabase({ ...database, auditLog: [entry, ...database.auditLog] });
 }
 
+async function addNotification(notification) {
+  const entry = {
+    ...notification,
+    id: notification.id || `notif-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    status: 'queued',
+  };
+
+  if (usingMongo) {
+    await mongoDb.collection('notifications').insertOne(entry);
+    return entry;
+  }
+
+  const database = await readFileDatabase();
+  await writeFileDatabase({
+    ...database,
+    notifications: [entry, ...(database.notifications || [])],
+  });
+  return entry;
+}
+
+function buildNotificationEvent({ type, actor, goal, targetRole }) {
+  const goalId = goal?.id || '';
+  const deepLink = `${process.env.FRONTEND_URL || process.env.CLIENT_ORIGIN || ''}?page=${targetRole === 'manager' ? 'approvals' : 'my-goals'}&goalId=${goalId}`;
+  const subjectMap = {
+    goal_submission: `Goal submitted: ${goal?.title || 'New goal'}`,
+    goal_approval: `Goal approved: ${goal?.title || 'Goal'}`,
+    goal_rejection: `Goal returned: ${goal?.title || 'Goal'}`,
+    checkin_update: `Check-in updated: ${goal?.title || 'Goal'}`,
+    checkin_reminder: 'Check-in reminder',
+  };
+
+  return {
+    type,
+    actor,
+    targetRole,
+    goalId,
+    employee: goal?.emp,
+    subject: subjectMap[type] || 'Goal portal notification',
+    email: {
+      enabled: Boolean(process.env.SMTP_HOST),
+      subject: subjectMap[type] || 'Goal portal notification',
+      body: `${actor || 'A user'} triggered ${type}. Open: ${deepLink}`,
+    },
+    teams: {
+      enabled: Boolean(process.env.TEAMS_WEBHOOK_URL),
+      adaptiveCard: {
+        type: 'AdaptiveCard',
+        version: '1.4',
+        body: [
+          { type: 'TextBlock', text: subjectMap[type] || 'Goal notification', weight: 'Bolder' },
+          { type: 'TextBlock', text: goal?.emp ? `Employee: ${goal.emp}` : '', wrap: true },
+        ],
+        actions: [{ type: 'Action.OpenUrl', title: 'Open goal sheet', url: deepLink }],
+      },
+    },
+    deepLink,
+  };
+}
+
 async function resetDatabase() {
   const seed = buildSeedDatabase();
 
@@ -228,7 +288,9 @@ async function resetDatabase() {
 
 module.exports = {
   addAudit,
+  addNotification,
   authenticate,
+  buildNotificationEvent,
   connectDatabase,
   createUser,
   getSnapshot,

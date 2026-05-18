@@ -5,7 +5,9 @@ const express = require('express');
 const cors = require('cors');
 const {
   addAudit,
+  addNotification,
   authenticate,
+  buildNotificationEvent,
   connectDatabase,
   createUser,
   getSnapshot,
@@ -116,6 +118,15 @@ app.post('/api/audit', async (req, res, next) => {
 
     await addAudit(entry);
     res.json(await getSnapshot());
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/notifications/event', async (req, res, next) => {
+  try {
+    const notification = buildNotificationEvent(req.body || {});
+    res.status(201).json(await addNotification(notification));
   } catch (error) {
     next(error);
   }

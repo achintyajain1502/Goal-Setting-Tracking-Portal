@@ -22,7 +22,7 @@ export const NAV = {
     { id: 'all-goals',  icon: '🎯', label: 'All Goals'   },
     { id: 'audit',      icon: '🔍', label: 'Audit Log'   },
     { id: 'reports',    icon: '📄', label: 'Reports'     },
-    { id: 'cycle-mgmt', icon: '⚙️', label: 'Cycle Mgmt' },
+    { id: 'cycle-mgmt', icon: '⚙️', label: 'Cycle Management' },
   ],
 };
 

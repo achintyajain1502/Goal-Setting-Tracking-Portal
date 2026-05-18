@@ -12,6 +12,7 @@ import {
   loadDatabase,
   saveAudit,
   saveGoals,
+  sendNotificationEvent,
   signupAccount,
 } from './db';
 
@@ -20,20 +21,20 @@ import { EmpDashboard, MyGoals, EmpCheckin } from './components/EmployeePages';
 // Manager pages
 import { MgrDashboard, TeamGoals, Approvals, MgrCheckin, SharedGoals } from './components/ManagerPages';
 // Admin pages
-import { AdminDashboard, AllGoals, AuditLog, Reports, CycleMgmt } from './components/AdminPages';
+import { AdminDashboard, AllGoals, AuditLog, Reports, CycleManagement } from './components/AdminPages';
 
 // ─── Page registry ────────────────────────────────────────────────────────────
-function usePages(goals, setGoals, auditLog, addAudit, showToast, navigate, currentUser) {
+function usePages(goals, setGoals, auditLog, addAudit, showToast, navigate, currentUser, notifyEvent) {
   return {
     employee: {
       dashboard: () => <EmpDashboard goals={goals} onNavigate={navigate} currentUser={currentUser} />,
-      'my-goals': () => <MyGoals goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} currentUser={currentUser} />,
-      checkin:   () => <EmpCheckin goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} currentUser={currentUser} />,
+      'my-goals': () => <MyGoals goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} currentUser={currentUser} notifyEvent={notifyEvent} />,
+      checkin:   () => <EmpCheckin goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} currentUser={currentUser} notifyEvent={notifyEvent} />,
     },
     manager: {
       dashboard:    () => <MgrDashboard goals={goals} onNavigate={navigate} />,
       'team-goals': () => <TeamGoals goals={goals} />,
-      approvals:    () => <Approvals goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} />,
+      approvals:    () => <Approvals goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} notifyEvent={notifyEvent} />,
       'checkin-mgr':() => <MgrCheckin goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} />,
       'shared-goals':()=> <SharedGoals goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} />,
     },
@@ -42,7 +43,7 @@ function usePages(goals, setGoals, auditLog, addAudit, showToast, navigate, curr
       'all-goals':() => <AllGoals goals={goals} setGoals={setGoals} addAudit={addAudit} showToast={showToast} />,
       audit:      () => <AuditLog auditLog={auditLog} />,
       reports:    () => <Reports goals={goals} showToast={showToast} />,
-      'cycle-mgmt':()=> <CycleMgmt showToast={showToast} />,
+      'cycle-mgmt':()=> <CycleManagement showToast={showToast} />,
     },
   };
 }
@@ -109,6 +110,12 @@ export default function App() {
     });
   }, [showToast]);
 
+  const notifyEvent = useCallback(event => {
+    sendNotificationEvent(event).catch(error => {
+      console.warn('Notification event failed', error);
+    });
+  }, []);
+
   const navigate = useCallback(id => setPage(id), []);
 
   const login = async ({ email, password }) => {
@@ -151,7 +158,7 @@ export default function App() {
     setPage('dashboard');
   };
 
-  const pages = usePages(goals, setGoals, auditLog, addAudit, showToast, navigate, currentUser);
+  const pages = usePages(goals, setGoals, auditLog, addAudit, showToast, navigate, currentUser, notifyEvent);
 
   // Get label for topbar
   const pageLabel = role ? (NAV[role]?.find(n => n.id === page)?.label || 'Dashboard') : '';

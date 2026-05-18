@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { DEMO_CREDENTIALS } from '../db';
-import { USERS } from '../data';
 
 export default function LoginScreen({ onLogin, onSignup }) {
   const [mode, setMode] = useState('login');
-  const [email, setEmail] = useState(DEMO_CREDENTIALS[0].email);
-  const [password, setPassword] = useState(DEMO_CREDENTIALS[0].password);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [dept, setDept] = useState('Sales');
 
@@ -20,21 +18,10 @@ export default function LoginScreen({ onLogin, onSignup }) {
     onLogin({ email, password });
   };
 
-  const fillCredentials = credential => {
-    setMode('login');
-    setEmail(credential.email);
-    setPassword(credential.password);
-  };
-
   const switchMode = nextMode => {
     setMode(nextMode);
-    if (nextMode === 'signup') {
-      setEmail('');
-      setPassword('');
-    } else {
-      setEmail(DEMO_CREDENTIALS[0].email);
-      setPassword(DEMO_CREDENTIALS[0].password);
-    }
+    setEmail('');
+    setPassword('');
   };
 
   return (
@@ -106,33 +93,6 @@ export default function LoginScreen({ onLogin, onSignup }) {
         >
           {isSignup ? 'Back to Sign in' : 'Sign up for new account'}
         </button>
-
-        {!isSignup && (
-          <div className="demo-accounts">
-            <div className="login-label">Demo accounts</div>
-            {DEMO_CREDENTIALS.map(credential => {
-              const user = USERS[credential.role];
-              return (
-                <button
-                  key={credential.email}
-                  className="role-btn"
-                  type="button"
-                  onClick={() => fillCredentials(credential)}
-                >
-                  <div className="role-icon" style={{ background: user.any + '22', color: user.color }}>
-                    {user.initials}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 500 }}>{user.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>
-                      {credential.email} / {credential.password}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
       </form>
     </div>
   );

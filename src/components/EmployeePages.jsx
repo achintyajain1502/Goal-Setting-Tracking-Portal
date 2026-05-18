@@ -56,7 +56,7 @@ export function EmpDashboard({ goals, onNavigate, currentUser = USERS.employee }
 }
 
 // ── My Goals ──────────────────────────────────────────────────────────────────
-export function MyGoals({ goals, setGoals, addAudit, showToast, currentUser = USERS.employee }) {
+export function MyGoals({ goals, setGoals, addAudit, showToast, currentUser = USERS.employee, notifyEvent }) {
   const [modal, setModal] = useState(null); // null | 'add' | goalObj
   const myGoals = goals.filter(g => g.empId === currentUser.id);
   const totalWeight = myGoals.reduce((s, g) => s + Number(g.weightage), 0);
@@ -91,6 +91,9 @@ export function MyGoals({ goals, setGoals, addAudit, showToast, currentUser = US
     ));
     const count = myGoals.filter(g => g.status === 'Draft').length;
     addAudit({ time: nowStr(), user: empName, action: `Submitted ${count} goal(s) for manager approval` });
+    myGoals
+      .filter(g => g.status === 'Draft')
+      .forEach(goal => notifyEvent?.({ type: 'goal_submission', actor: empName, goal, targetRole: 'manager' }));
     showToast(`${count} goal(s) submitted for approval`);
   };
 
@@ -195,7 +198,7 @@ export function MyGoals({ goals, setGoals, addAudit, showToast, currentUser = US
 }
 
 // ── Employee Check-in ─────────────────────────────────────────────────────────
-export function EmpCheckin({ goals, setGoals, addAudit, showToast, currentUser = USERS.employee }) {
+export function EmpCheckin({ goals, setGoals, addAudit, showToast, currentUser = USERS.employee, notifyEvent }) {
   const approved = goals.filter(g => g.empId === currentUser.id && g.status === 'Approved');
   const [drafts, setDrafts] = useState(
     Object.fromEntries(approved.map(g => [g.id, { actual: g.actual ?? '', status: g.checkStatus }]))
@@ -208,6 +211,7 @@ export function EmpCheckin({ goals, setGoals, addAudit, showToast, currentUser =
     const actual = g.uom === 'Timeline' ? d.actual : Number(d.actual);
     setGoals(prev => prev.map(x => x.id === id ? { ...x, actual, checkStatus: d.status } : x));
     addAudit({ time: nowStr(), user: empName, action: `Updated Q1 actual for "${g.title}": ${actual} ${g.unit}` });
+    notifyEvent?.({ type: 'checkin_update', actor: empName, goal: { ...g, actual, checkStatus: d.status }, targetRole: 'manager' });
     showToast('Achievement saved!');
   };
 

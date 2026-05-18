@@ -84,6 +84,7 @@ Add these environment variables in Vercel:
 MONGODB_URI=your mongodb://... connection string
 MONGODB_DB=atomquest
 CLIENT_ORIGIN=https://your-vercel-domain.vercel.app
+FRONTEND_URL=https://your-vercel-domain.vercel.app
 ```
 
 After deployment, verify:
@@ -93,6 +94,31 @@ https://your-vercel-domain.vercel.app/api/health
 ```
 
 It should return `"database":"mongodb"`.
+
+## Email & Microsoft Teams Integration
+
+Planned notification coverage:
+
+- Automated email notifications for key events: goal submission, approval, rejection, and check-in reminders
+- Teams bot or adaptive card notifications for managers when a team member submits or updates goals
+- Deep-link support so users can navigate directly from a Teams notification to the relevant goal sheet
+
+Configuration placeholders are included in `.env.example`:
+
+```txt
+NOTIFICATION_FROM=goals@atomquest.local
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-smtp-user
+SMTP_PASSWORD=your-smtp-password
+TEAMS_WEBHOOK_URL=https://outlook.office.com/webhook/...
+```
+
+Deep links should target app routes such as:
+
+```txt
+https://your-vercel-domain.vercel.app?role=manager&page=approvals&goalId=123
+```
 
 ## Project Structure
 

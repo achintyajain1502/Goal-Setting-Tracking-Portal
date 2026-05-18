@@ -3,7 +3,7 @@ import {
   StatCard, Alert, Badge, ProgressBar, Btn, Modal,
   FormGroup, Input, Select, Textarea, SectionHeader,
 } from './UI';
-import { nowStr } from '../utils';
+import { computeProgress, nowStr } from '../utils';
 import { THRUST_AREAS, USERS } from '../data';
 
 const TEAM_EMP_IDS = ['emp1', 'emp2', 'emp3'];
@@ -15,6 +15,18 @@ export function MgrDashboard({ goals, onNavigate }) {
   const teamGoals = goals.filter(g => TEAM_EMP_IDS.includes(g.empId));
   const pending   = teamGoals.filter(g => g.status === 'Pending').length;
   const approved  = teamGoals.filter(g => g.status === 'Approved').length;
+  const memberProgress = Object.values(EMP_MAP).map(emp => {
+    const memberGoals = goals.filter(g => g.emp === emp);
+    const progress = memberGoals.length
+      ? Math.round(memberGoals.reduce((sum, goal) => sum + computeProgress(goal), 0) / memberGoals.length)
+      : 0;
+    const completed = memberGoals.filter(g => g.checkStatus === 'Completed').length;
+
+    return { emp, progress, completed, total: memberGoals.length };
+  });
+  const overallProgress = memberProgress.length
+    ? Math.round(memberProgress.reduce((sum, member) => sum + member.progress, 0) / memberProgress.length)
+    : 0;
 
   return (
     <div>
@@ -22,7 +34,7 @@ export function MgrDashboard({ goals, onNavigate }) {
         <StatCard label="Team Members"   value={3}         color="var(--accent2)" />
         <StatCard label="Goals Pending"  value={pending}   sub="awaiting review"  color="var(--amber)" />
         <StatCard label="Goals Approved" value={approved}  color="var(--green)"   />
-        <StatCard label="Check-in Rate"  value="67%"       sub="2 of 3 completed" color="var(--teal)"  />
+        <StatCard label="Team Progress"  value={`${overallProgress}%`} sub="planned vs actual" color="var(--teal)"  />
       </div>
 
       {pending > 0 && (
@@ -32,6 +44,36 @@ export function MgrDashboard({ goals, onNavigate }) {
         </Alert>
       )}
 
+      <div className="card" style={{ marginBottom: 16 }}>
+        <SectionHeader title="Member Progress" />
+        <div style={{ display: 'grid', gap: 14 }}>
+          {memberProgress.map(member => (
+            <div key={member.emp} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{member.emp}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
+                    {member.completed} of {member.total} completed
+                  </div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: member.progress >= 80 ? 'var(--green)' : member.progress >= 50 ? 'var(--amber)' : 'var(--red)' }}>
+                  {member.progress}%
+                </div>
+              </div>
+              <div className="progress-bar" style={{ height: 12, background: 'var(--surface3)' }}>
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${Math.max(Math.min(member.progress, 100), member.progress > 0 ? 6 : 0)}%`,
+                    background: member.progress >= 80 ? 'var(--green)' : member.progress >= 50 ? 'var(--amber)' : 'var(--red)',
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="card">
         <SectionHeader title="Team Summary" />
         <div className="table-wrap">
@@ -39,7 +81,7 @@ export function MgrDashboard({ goals, onNavigate }) {
             <thead>
               <tr>
                 <th>Employee</th><th>Goals</th><th>Pending</th>
-                <th>Weight Sum</th><th>Q1 Status</th>
+                <th>Weight Sum</th><th>Progress</th><th>Q1 Status</th>
               </tr>
             </thead>
             <tbody>
@@ -48,6 +90,9 @@ export function MgrDashboard({ goals, onNavigate }) {
                 const pw   = eg.reduce((s, g) => s + Number(g.weightage), 0);
                 const pend = eg.filter(g => g.status === 'Pending').length;
                 const ci   = eg.filter(g => g.checkStatus !== 'Not Started').length;
+                const progress = eg.length
+                  ? Math.round(eg.reduce((sum, goal) => sum + computeProgress(goal), 0) / eg.length)
+                  : 0;
                 return (
                   <tr key={emp}>
                     <td style={{ fontWeight: 500 }}>{emp}</td>
@@ -57,6 +102,15 @@ export function MgrDashboard({ goals, onNavigate }) {
                       : <Badge label="Approved" />}
                     </td>
                     <td><span style={{ color: pw === 100 ? 'var(--green)' : 'var(--amber)', fontWeight: 500 }}>{pw}%</span></td>
+                    <td style={{ minWidth: 150 }}>
+                      <div className="progress-bar" style={{ height: 7 }}>
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${Math.min(progress, 100)}%`, background: progress >= 80 ? 'var(--green)' : progress >= 50 ? 'var(--amber)' : 'var(--red)' }}
+                        />
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>{progress}%</div>
+                    </td>
                     <td>
                       {ci >= eg.length
                         ? <Badge label="Completed" />
@@ -89,9 +143,28 @@ export function TeamGoals({ goals }) {
       </div>
       {shown.map(emp => {
         const eg = goals.filter(g => g.emp === emp);
+        const memberProgress = eg.length
+          ? Math.round(eg.reduce((sum, goal) => sum + computeProgress(goal), 0) / eg.length)
+          : 0;
         return (
           <div key={emp} style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text2)', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--border)' }}>{emp}</div>
+            <div style={{ marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>{emp}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: memberProgress >= 80 ? 'var(--green)' : memberProgress >= 50 ? 'var(--amber)' : 'var(--red)' }}>
+                  {memberProgress}% progress
+                </div>
+              </div>
+              <div className="progress-bar" style={{ height: 10, background: 'var(--surface3)' }}>
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${Math.max(Math.min(memberProgress, 100), memberProgress > 0 ? 6 : 0)}%`,
+                    background: memberProgress >= 80 ? 'var(--green)' : memberProgress >= 50 ? 'var(--amber)' : 'var(--red)',
+                  }}
+                />
+              </div>
+            </div>
             {eg.map(g => (
               <div key={g.id} className="goal-item" style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -106,7 +179,7 @@ export function TeamGoals({ goals }) {
                     <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--accent2)' }}>{g.weightage}%</span>
                   </div>
                 </div>
-                {g.actual != null && <ProgressBar goal={g} />}
+                <ProgressBar goal={g} />
               </div>
             ))}
             {eg.length === 0 && <div style={{ color: 'var(--text3)', fontSize: 13 }}>No goals submitted yet.</div>}
@@ -118,7 +191,7 @@ export function TeamGoals({ goals }) {
 }
 
 // ── Approvals ─────────────────────────────────────────────────────────────────
-export function Approvals({ goals, setGoals, addAudit, showToast }) {
+export function Approvals({ goals, setGoals, addAudit, showToast, notifyEvent }) {
   const pending = goals.filter(g => g.status === 'Pending');
   const [edits, setEdits] = useState(
     Object.fromEntries(pending.map(g => [g.id, { target: g.target, weightage: g.weightage }]))
@@ -132,6 +205,7 @@ export function Approvals({ goals, setGoals, addAudit, showToast }) {
       x.id === id ? { ...x, target: e.target ?? x.target, weightage: Number(e.weightage) || x.weightage, status: 'Approved', locked: true } : x
     ));
     addAudit({ time: nowStr(), user: mgrName, action: `Approved goal "${g.title}" for ${g.emp}` });
+    notifyEvent?.({ type: 'goal_approval', actor: mgrName, goal: g, targetRole: 'employee' });
     showToast('Goal approved and locked');
   };
 
@@ -139,6 +213,7 @@ export function Approvals({ goals, setGoals, addAudit, showToast }) {
     const g = goals.find(x => x.id === id);
     setGoals(prev => prev.map(x => x.id === id ? { ...x, status: 'Draft', locked: false } : x));
     addAudit({ time: nowStr(), user: mgrName, action: `Returned goal "${g.title}" to ${g.emp} for rework` });
+    notifyEvent?.({ type: 'goal_rejection', actor: mgrName, goal: g, targetRole: 'employee' });
     showToast('Goal returned to employee');
   };
 
